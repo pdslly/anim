@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>Document</title>
+	<style>
+		*{padding:0;margin:0;}
+		html{overflow-x:hidden;overflow-y:hidden; }
+		#myCan{background:pink;}
+	</style>
+</head>
+<body>
+	<canvas id="myCan">YOUR BROWSER NOT SUPPORT CANVAS!</canvas>
+	<script>
+		(function(){
+			var mycan = document.getElementById('myCan'), ctx, dimension, cArr, mouseCoord = {x:0, y:0, trigger:false};
+			if(!mycan.getContext) return;
+			ctx = mycan.getContext('2d');
+			function customDimension(ele){
+				var _h = window.innerHeight,
+					_w = window.innerWidth;
+				function sizeAdjust(){
+					ele.setAttribute('height', _h+'px');
+					ele.setAttribute('width', _w+'px');
+				};
+				window.addEventListener('resize', function(){
+					sizeAdjust();
+				});
+				sizeAdjust();
+				return {w:_w, h:_h};
+			};
+			dimension = customDimension(mycan);
+			mycan.addEventListener('mousemove', function(e){
+				mouseCoord.x = e.clientX;
+				mouseCoord.y = e.clientY;
+				mouseCoord.trigger = true;
+			});
+			mycan.addEventListener('mouseout', function(e){
+				mouseCoord.trigger = false;
+			});
+			function circle(d){
+				var radius = (Math.random()*40+10)>>0;
+				function randomColor(){
+					return '#'+('00000'+((Math.random()*16777215+0.5)>>0).toString(16)).substr(-6);
+				};
+				this.radius = radius;
+				this.x = (Math.random()*(d.w-2*radius)+radius)>>0;
+				this.y = (Math.random()*(d.h-2*radius)+radius)>>0;
+				this.speed = (Math.random()*20+5)>>0;
+				this.dirX = Math.random() > 0.5?1:-1;
+				this.dirY = Math.random() > 0.5?1:-1;
+				this.color = randomColor();
+			};
+			function generalCircleArr(count){
+				var r = [], i = 0;
+				while(count--){
+					r[i++] = new circle(dimension);
+				}
+				return r;
+			};
+			cArr = generalCircleArr(100);
+			function drawCirCle(ctx, cArr){
+				var i = 0, len = cArr.length, dis, radius;
+				ctx.save();
+				ctx.clearRect(0, 0, dimension.w, dimension.h);
+				for(; i < len; i++){
+					radius = cArr[i].radius;
+					if(mouseCoord.trigger) dis = Math.pow(cArr[i].x - mouseCoord.x, 2) + Math.pow(cArr[i].y - mouseCoord.y, 2);
+					if(cArr[i].x + cArr[i].radius > dimension.w) cArr[i].dirX = -1;
+					if(cArr[i].y + cArr[i].radius > dimension.h) cArr[i].dirY = -1;
+					if(cArr[i].x - cArr[i].radius < 0) cArr[i].dirX = 1;
+					if(cArr[i].y - cArr[i].radius < 0) cArr[i].dirY = 1;
+					if(mouseCoord.trigger && dis < 10000) radius = radius*2.5;
+					ctx.beginPath();
+					ctx.fillStyle = cArr[i].color;
+					ctx.arc(cArr[i].x, cArr[i].y, radius, 0, Math.PI*2);
+					ctx.fill();
+					ctx.closePath();
+					cArr[i].x += cArr[i].speed*cArr[i].dirX;
+					cArr[i].y += cArr[i].speed*cArr[i].dirY;
+				}
+				ctx.destroy();
+			};
+			setInterval(function(){
+				drawCirCle(ctx, cArr);
+			}, 50);
+		})()
+	</script>
+</body>
+</html>
